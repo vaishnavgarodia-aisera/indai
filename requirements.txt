@@ -1,0 +1,6 @@
+twilio
+pydantic
+flask
+flask-cors
+flask-sock
+websockets
