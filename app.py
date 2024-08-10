@@ -14,6 +14,7 @@ from twilio.twiml.messaging_response import MessagingResponse
 from websockets.exceptions import ConnectionClosed
 
 from modules.call import CallModule
+from modules.stt import process_audio
 
 CALL_XML_RESPONSE = """\
 <?xml version="1.0" encoding="UTF-8"?>
@@ -27,8 +28,6 @@ CALL_XML_RESPONSE = """\
 app = Flask(__name__)
 CORS(app)
 socket = Sock(app)
-
-call_module: Optional[CallModule] = None
 TELEPHONY_URL = os.getenv("TELEPHONY_URL")
 
 @app.route('/makecall', methods=['POST'])
@@ -52,10 +51,11 @@ def media():
 def echo(ws):
     """Handles WebSocket connections for media streaming."""
     logging.info("CallApp: telephony socket connection accepted")
+    deepgram_socket = await process_audio()
     while True:
         try:
             message = ws.receive()
-            stream_status = call_module.receive_media(message, ws)
+            stream_status = call_module.receive_media(message, ws, deepgram_socket)
             if not stream_status:
                 break
         except ConnectionClosed as e:
@@ -70,4 +70,7 @@ def set_call_app_module(callmodule: CallModule):
     logging.info("Global telephony_module set for call_app.")
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=8080)
+    call_module: Optional[CallModule] = CallModule()
+    call_module.initiate_call(receiver_number="8482133428")
+    app.run(host="localhost", port=8080)
+    

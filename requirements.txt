@@ -4,3 +4,5 @@ flask
 flask-cors
 flask-sock
 websockets
+aiohttp-wsgi
+deepgram-sdk
